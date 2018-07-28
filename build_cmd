@@ -1,0 +1,3 @@
+pip install pyinstaller
+
+C:\Python27\Scripts\pyinstaller.exe client.py --onefile --noconsole
