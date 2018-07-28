@@ -34,6 +34,9 @@ class Listener:
 
     def exec_remote(self,cmd):
         self.reliable_send(cmd)
+        if cmd[0] == "exit":
+            self.connection.close()
+            exit()
         return self.reliable_recv()
 
     def run(self):
@@ -41,6 +44,7 @@ class Listener:
             cmd = raw_input(">> ")
             if not cmd:
                 continue
+            cmd = cmd.split(" ")
             result = self.exec_remote(cmd)
             print result
 

